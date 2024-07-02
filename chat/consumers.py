@@ -2,6 +2,8 @@ import json
 from channels.generic.websocket import WebsocketConsumer
 from asgiref.sync import async_to_sync
 from datetime import datetime
+from django.core.paginator import Paginator
+from .models.messages import Message
 
 class ChatConsumer(WebsocketConsumer):
     def connect(self):
@@ -13,12 +15,29 @@ class ChatConsumer(WebsocketConsumer):
         )
         self.accept()
         
+        messages = Message.objects.all().order_by("-created")
+        paginator = Paginator(messages, 6)
+        try:
+            current_page_mes = paginator.page(1)
+        except:
+            current_page_mes = []
         
+        message_list = []
+        for message in current_page_mes:
+            message_list.append({
+                'user_name': message.user_name,
+                'email': message.email,
+                'home_page': message.home_page,
+                'created': message.created.strftime('%d.%m.%Y %H:%M'),
+                'message': message.text,
+            })
+        
+        # print(message_list)
         
         self.send(text_data=json.dumps({
             "type":"connection_established",
             "message":"You are now connected!!!",
-            "message_list": ["test", "test2",] 
+            "message_list": message_list, 
         }))
         
         
@@ -29,7 +48,7 @@ class ChatConsumer(WebsocketConsumer):
         email = text_data_json["email"]
         home_page = text_data_json["home_page"]
         message = text_data_json["message"]
-        date_time = datetime.now().strftime('%Y.%m.%d %H:%M')
+        created = datetime.now().strftime('%d.%m.%Y %H:%M')
         
         
         async_to_sync(self.channel_layer.group_send)(
@@ -39,32 +58,33 @@ class ChatConsumer(WebsocketConsumer):
                 'user_name': user_name,
                 'email': email,
                 'home_page': home_page,
-                'date_time': date_time,
+                'created': created,
                 'message': message,
             }
         )
-        
-        
-        # print("Message:", message)
-        
-        # self.send(text_data=json.dumps({
-        #     "type":"chat",
-        #     "message": message,
-        # }))
         
     def chat_message(self, event):
         user_name = event["user_name"]
         email = event["email"]
         home_page = event["home_page"]
-        date_time = event["date_time"]
+        created = event["created"]
         message = event["message"]
+        
+        Message.objects.create(
+            user_name=user_name,
+            email=email,
+            home_page=home_page,
+            text=message,
+            created=created,
+            # reply=None,
+        )
         
         self.send(text_data=json.dumps({
             "type": "chat",
             'user_name': user_name,
             'email': email,
             'home_page': home_page,
-            'date_time': date_time,
+            'created': created,
             'message': message,
         }))
         
