@@ -38,7 +38,7 @@
                     <div class="username"><a href="{{ message.home_page }}">{{ message.user_name }}</a></div>
                     <div class="date">{{ message.created }}</div>
                 </div>
-                <div class="content">{{ message.message }}</div>
+                <div class="content">{{ message.message|safe }}</div>
             </div>
         {% endfor %}
     </div>
@@ -98,7 +98,7 @@
             let data = JSON.parse(e.data)
             // console.log("Data:", data)
 
-            if(data.type === "chat"){                    
+            if(data.type === "chat" && {{ paginator_mes.number }} === 1){                    
                 let messages = document.getElementById("messages")
                 messages.insertAdjacentHTML("afterbegin", 
                     `<div class="post">

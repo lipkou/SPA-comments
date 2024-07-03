@@ -11,7 +11,14 @@ a {
     color: #ffffff;
 }
 a:hover {
-    color: #b1d6ff;
+    color: #a7d0ff;
+}
+
+.content a {
+    color: #328fd5;
+}
+.content a:hover {
+    color: #007bff;
 }
 
 .post {
