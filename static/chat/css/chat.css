@@ -76,6 +76,7 @@ label {
     margin: 10px 0 5px;
 }
 
+textarea[name="text"],
 input[type="text"],
 input[type="email"],
 input[type="url"] {
@@ -84,6 +85,15 @@ input[type="url"] {
     margin-bottom: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
+}
+textarea[name="text"]{
+    height: 15px;
+}
+
+fieldset {
+    width: calc(100% - 24px);
+    margin-bottom: 10px;
+    border-radius: 5px;
 }
 
 input[type="submit"] {
@@ -98,4 +108,48 @@ input[type="submit"] {
 
 input[type="submit"]:hover {
     background-color: #3a5a78;
+}
+
+
+
+
+.paginator {
+    display: flex;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+.pagination {
+    display: flex;
+    list-style: none;
+    padding: 0;
+}
+.pagination li a {
+    border: 1px solid #ddd;
+    padding: 5px 10px;
+    margin: 0 5px;
+    border-radius: 15px; /* Для круглой формы */
+    background-color: #2a72c0;
+    transition: background-color 0.3s;
+}
+.pagination li:first-child a,
+.pagination li:last-child a {
+    border-radius: 5px; /* Для стрелки "Следующая" делаем углы скругленными, а не круглыми */
+}
+.pagination li.active a,
+.pagination li a:hover {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+.pagination li a:focus {
+    outline: none;
+    box-shadow: none;
+}
+.pagination .dots {
+    padding: 5px 10px;
+    margin: 0 5px;
+}
+.pagination li a {
+    cursor: pointer;
+    text-decoration: none; /* Убираем подчеркивание текста */
 }

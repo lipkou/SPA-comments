@@ -1,10 +1,11 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {% load static %}
+    {% load message_tags %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static "chat/css/chat.css" %}">
     <title>Document</title>
 </head>
@@ -12,7 +13,8 @@
     <h1>Hello world!</h1>
     <div class="forum">
         <form id="messageForm2"> {% csrf_token %}
-            <label for="user_name">User name:</label>
+            {{ form }}
+            {% comment %} <label for="user_name">User name:</label>
             <input type="text" id="user_name" name="user_name" required/>
             
             <label for="email">Email:</label>
@@ -22,31 +24,79 @@
             <input type="url" id="home_page" name="home_page"/>
             
             <label for="message">Message:</label>
-            <input type="text" id="message" name="message" required/>
-    
+            <input type="text" id="message" name="message" required/> {% endcomment %}
+
             <input type="submit" value="Submit"/>
+            <button id='js-captcha-refresh' type="button"><i class="bi bi-arrow-clockwise"></i></button>
         </form>
+
     </div>
     <div id="messages">
-        <!-- <div class="post">
-            <div class="header">
-                <div class="username"><a></a></div>
-                <div class="date"></div>
+        {% for message in message_list %}
+            <div class="post">
+                <div class="header">
+                    <div class="username"><a href="{{ message.home_page }}">{{ message.user_name }}</a></div>
+                    <div class="date">{{ message.created }}</div>
+                </div>
+                <div class="content">{{ message.message }}</div>
             </div>
-            <div class="content">
-            </div>
-        </div> -->
+        {% endfor %}
     </div>
-        
+    
+    <nav class="paginator">
+        <ul class="pagination">
+            <li class="page-item"><a class="page-link" href="{% if  paginator_mes.has_previous %}
+                ?{% change_params page=paginator_mes.previous_page_number %}
+                {% else %}#{% endif %}">«</a>
+            </li>
+            
+            {% if paginator_mes.number|add:-1 > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% change_params page=1 %}">1</a>
+                </li>
+    
+                {% if paginator_mes.number|add:-2 > 1  %}
+                    <li class="page-item"><p>...</p></li>
+                {% endif %}
+            {% endif %}
+    
+            {% for page in paginator_mes.paginator.page_range %}
+                {% if paginator_mes.number|add:-1  <= page and page <= paginator_mes.number|add:1  %}
+                    <li class="page-item {% if paginator_mes.number == page %}active{% endif %}">
+                        <a class="page-link" href="?{% change_params page=page  %}">{{ page }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            
+            {% if paginator_mes.number|add:1 < paginator_mes.paginator.num_pages %}
+                {% if paginator_mes.number|add:2 < paginator_mes.paginator.num_pages  %}
+                    <li class="page-item"><p>...</p></li>
+                {% endif %}    
+                
+                <li class="page-item">
+                    <a class="page-link" href="?{% change_params page=paginator_mes.paginator.num_pages %}">{{ paginator_mes.paginator.num_pages }}</a>
+                </li>    
+            {% endif %}
+            
+            <li class="page-item"><a class="page-link" href="{% if  paginator_mes.has_next %}
+            ?{% change_params page=paginator_mes.next_page_number %}
+            {% else %}#{% endif %}">»</a></li>
+        </ul>
+    </nav>
     
     <script type="text/javascript">
+        document.getElementById('js-captcha-refresh').addEventListener('click', function() {
+            window.location.reload(); 
+        });
+        
         let url = `ws://${window.location.host}/ws/socket-server/`
 
         const chatSocket = new WebSocket(url)
 
         chatSocket.onmessage = function(e){
             let data = JSON.parse(e.data)
-            console.log("Data:", data)
+            // console.log("Data:", data)
 
             if(data.type === "chat"){                    
                 let messages = document.getElementById("messages")
@@ -59,21 +109,9 @@
                         <div class="content">${data.message}</div>
                     </div>`)
             }
-            
-            if(data.type === "connection_established"){
-                
-                for (const item of data.message_list) {
-                    console.log(item)
-                    let messages = document.getElementById("messages")
-                    messages.insertAdjacentHTML("beforeend", 
-                        `<div class="post">
-                            <div class="header">
-                                <div class="username"><a href="${item.home_page}">${item.user_name}</a></div>
-                                <div class="date">${item.created}</div>
-                            </div>
-                            <div class="content">${item.message}</div>
-                        </div>`)
-                }
+            if(data.type === "error") {
+                console.log(data.errors)
+                alert(data.errors)
             }
         }
 
@@ -84,12 +122,15 @@
             let user_name = e.target.user_name.value
             let email = e.target.email.value
             let home_page = e.target.home_page.value
-            let message = e.target.message.value
+            let message = e.target.text.value
+            let captcha_0 = e.target.captcha_0.value
+            let captcha_1 = e.target.captcha_1.value
             chatSocket.send(JSON.stringify({
                 'user_name': user_name,
                 'email': email,
                 'home_page': home_page,
                 'message': message,
+                'captcha': [captcha_0, captcha_1],
             }))
         })
 
