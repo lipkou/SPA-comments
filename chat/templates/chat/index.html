@@ -13,17 +13,6 @@
     <div class="forum">
         <form id="messageForm2"> {% csrf_token %}
             {{ form }}
-            {% comment %} <label for="user_name">User name:</label>
-            <input type="text" id="user_name" name="user_name" required/>
-            
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required/>
-            
-            <label for="home_page">Home page:</label>
-            <input type="url" id="home_page" name="home_page"/>
-            
-            <label for="message">Message:</label>
-            <input type="text" id="message" name="message" required/> {% endcomment %}
 
             <input type="submit" value="Submit"/>
             <button id='js-captcha-refresh' type="button"><i class="bi bi-arrow-clockwise"></i></button>
