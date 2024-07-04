@@ -40,31 +40,6 @@ class ChatConsumer(WebsocketConsumer):
             return
         
         
-        
-        # if not re.compile("^[a-zA-Z0-9]+$").match(user_name):
-        #     self.send(text_data=json.dumps({
-        #         "type": "error",
-        #         "errors": "User_name может состоять только из латинских букв и цифр.",
-        #     }))
-        #     return
-        
-        # try:
-        #     captcha_0 = CaptchaStore.objects.get(hashkey=captcha[0])
-        #     if captcha_0.response != captcha[1].lower():
-        #         self.send(text_data=json.dumps({
-        #             "type": "error",
-        #             "errors": "Неверная капча.",
-        #         }))
-        #         return
-        #     # captcha_0.delete()
-        # except CaptchaStore.DoesNotExist:
-        #     self.send(text_data=json.dumps({
-        #         "type": "error",
-        #         "errors": "Капча устарела или недействительна.",
-        #     }))
-        #     return
-
-        
         Message.objects.create(
             user_name=user_name,
             email=email,
@@ -97,9 +72,6 @@ class ChatConsumer(WebsocketConsumer):
             'message': event["message"],
         }))
         
-        
-    # def disconnect(self, close_code):
-    #     pass
 
 
 class MessageFormValidator:
@@ -128,15 +100,12 @@ class MessageFormValidator:
     def message(self):
         message = self.text_data_json["message"]
         
-        # Список разрешенных тегов
         allowed_tags = ['a', 'code', 'i', 'strong']
 
-        # Создаем объект BeautifulSoup
         soup = BeautifulSoup(message, 'html.parser')
         if str(soup) != message:
             return "Теги не закрыты корректно."
             
-        # Ищем все теги в документе
         for tag in soup.find_all():
             if tag.name not in allowed_tags:
                 return f"Найден неразрешённый тег: {tag.name}"
