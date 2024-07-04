@@ -6,7 +6,7 @@ from django.core.paginator import Paginator
 
 def home(request):
     page = int(request.GET.get("page", 1))
-    sort_type = request.GET.get("sort_type", "-created")
+    sort_type = request.GET.get("sort", "-created")
 
     
     messages = Message.objects.all().order_by(sort_type)

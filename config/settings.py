@@ -3,8 +3,6 @@ import environ
 import os
 
 
-SECRET_KEY = 'django-insecure-0pf)w0z1lryr)ly-dh+*vs9=7!@3uch9&o1x^@(0!3z&@^^j!v'
-
 root = environ.Path(__file__) - 2
 env = environ.Env()
 
@@ -36,11 +34,11 @@ INSTALLED_APPS += [
 
 ASGI_APPLICATION = "config.asgi.application"
 
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',
-    },
-}
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels.layers.InMemoryChannelLayer',
+#     },
+# }
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

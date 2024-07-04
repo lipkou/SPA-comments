@@ -31,6 +31,18 @@
         </form>
 
     </div>
+
+    <div class="sort-buttons">
+        <form action="{% url "chat:home" %}" method="get">
+            <button type="submit" name="sort" value="-user_name">User Name &uarr;</button>
+            <button type="submit" name="sort" value="user_name">User Name &darr;</button>
+            <button type="submit" name="sort" value="-email">Email &uarr;</button>
+            <button type="submit" name="sort" value="email">Email &darr;</button>
+            <button type="submit" name="sort" value="-created">Date Added &uarr;</button>
+            <button type="submit" name="sort" value="created">Date Added &darr;</button>
+        </form>
+    </div>
+
     <div id="messages">
         {% for message in message_list %}
             <div class="post">
@@ -108,6 +120,7 @@
                         </div>
                         <div class="content">${data.message}</div>
                     </div>`)
+                
             }
             if(data.type === "error") {
                 console.log(data.errors)
@@ -123,6 +136,7 @@
             let email = e.target.email.value
             let home_page = e.target.home_page.value
             let message = e.target.text.value
+            e.target.text.value = ''
             let captcha_0 = e.target.captcha_0.value
             let captcha_1 = e.target.captcha_1.value
             chatSocket.send(JSON.stringify({
