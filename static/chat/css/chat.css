@@ -6,6 +6,7 @@ body {
     font-size: 16px;
 }
 
+/* messages */
 a {
     text-decoration: none;
     color: #ffffff;
@@ -22,11 +23,14 @@ a:hover {
 }
 
 .post {
+    width: 600px;
+    margin: 0 auto;
+}
+
+.message {
     background-color: #fff;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    width: 600px;
-    margin: 0 auto;
     margin-bottom: 15px;
     overflow: hidden;
 }
@@ -55,17 +59,41 @@ a:hover {
     border-top: 1px solid #ccc;
 }
 
+.responses {
+    margin-left: 20px;
+    border-left: 3px solid #436a976e; /* Добавляем линию для визуального разделения */
+    padding-left: 15px;
+    border-radius: 3ch 3ch;
+}
+
+.response {
+    background-color: #f8f8f8; /* Чуть светлее фона основного сообщения */
+    width: auto;
+}
+
+.response .header {
+    background-color: #436a97; /* Чуть светлее, чем у основного сообщения */
+}
+.reply-button {
+    background-color: #00000000;
+    padding: 0px;
+    margin: 0px 0px 0px 10px;
+}
+
+.reply-button:hover {
+    background-color: #00000000;
+
+}
 
 
-
-
+/* sort-buttons */
 .sort-buttons {
     margin: 20px auto;
     text-align: center;
 }
 
 button {
-    background-color: #4CAF50; /* Green */
+    background-color: #4CAF50;
     border: none;
     color: white;
     padding: 10px 20px;
@@ -86,6 +114,7 @@ button:hover {
 
 
 
+/* messages forum */
 body {
     font-family: Arial, sans-serif;
     background-color: #f0f0f0;
@@ -93,7 +122,6 @@ body {
     padding: 20px;
     font-size: 16px;
 }
-
 .forum {
     background-color: #fff;
     border-radius: 8px;
@@ -104,7 +132,7 @@ body {
 }
 
 label {
-    font-weight: bold;
+    /* font-weight: bold; */
     display: block;
     margin: 10px 0 5px;
 }
@@ -146,6 +174,8 @@ input[type="submit"]:hover {
 
 
 
+
+/* paginators */
 .paginator {
     display: flex;
     justify-content: center;
@@ -160,13 +190,13 @@ input[type="submit"]:hover {
     border: 1px solid #ddd;
     padding: 5px 10px;
     margin: 0 5px;
-    border-radius: 15px; /* Для круглой формы */
+    border-radius: 15px;
     background-color: #2a72c0;
     transition: background-color 0.3s;
 }
 .pagination li:first-child a,
 .pagination li:last-child a {
-    border-radius: 5px; /* Для стрелки "Следующая" делаем углы скругленными, а не круглыми */
+    border-radius: 5px; 
 }
 .pagination li.active a,
 .pagination li a:hover {
@@ -184,5 +214,5 @@ input[type="submit"]:hover {
 }
 .pagination li a {
     cursor: pointer;
-    text-decoration: none; /* Убираем подчеркивание текста */
+    text-decoration: none; 
 }

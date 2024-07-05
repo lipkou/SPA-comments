@@ -25,7 +25,7 @@ class ChatConsumer(WebsocketConsumer):
         home_page = text_data_json["home_page"]
         message = text_data_json["message"]
         created = datetime.now().strftime('%d.%m.%Y %H:%M')
-        captcha:list[str] = text_data_json["captcha"]
+        reply = text_data_json["reply"]
         
         
         # Validate
@@ -39,25 +39,35 @@ class ChatConsumer(WebsocketConsumer):
             }))
             return
         
+        reply_for = None
+        if reply:
+            reply_class = Message.objects.get(id=reply)
+            reply_for = reply_class.user_name
+            
+        else: 
+            reply_class = None
         
-        Message.objects.create(
+        new_message = Message.objects.create(
             user_name=user_name,
             email=email,
             home_page=home_page,
             text=message,
             created=created,
-            # reply=None,
+            reply=reply_class,
         )
         
         async_to_sync(self.channel_layer.group_send)(
             self.room_group_name,
             {
                 "type": "chat_message",
+                "id": new_message.id,
                 'user_name': user_name,
                 'email': email,
                 'home_page': home_page,
                 'created': created,
                 'message': message,
+                'reply': reply,
+                'reply_for': reply_for,
             }
         )
 
@@ -65,11 +75,14 @@ class ChatConsumer(WebsocketConsumer):
     def chat_message(self, event):
         self.send(text_data=json.dumps({
             "type": "chat",
+            'id': event["id"],
             'user_name': event["user_name"],
             'email': event["email"],
             'home_page': event["home_page"],
             'created': event["created"],
             'message': event["message"],
+            'reply': event["reply"],
+            'reply_for': event["reply_for"],
         }))
         
 

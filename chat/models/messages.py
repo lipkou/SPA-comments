@@ -9,10 +9,14 @@ class Message(models.Model):
     raiting = models.SmallIntegerField(default=0)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-    reply = models.ForeignKey("chat.Message", models.CASCADE, blank=True, null=True)
-    
+    reply = models.ForeignKey("self", on_delete=models.CASCADE, blank=True, null=True, related_name="responses")
+
     class Meta:
         ordering = ('-created', "user_name", "email")
     
     def __str__(self):
         return f"{self.user_name} - {self.created.strftime('%Y-%m-%d %H:%M')} ({self.pk})"
+    
+    @property
+    def is_response(self):
+        return self.reply is not None

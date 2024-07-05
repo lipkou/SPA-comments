@@ -13,9 +13,10 @@
     <div class="forum">
         <form id="messageForm2"> {% csrf_token %}
             {{ form }}
-
+            <input type="hidden" name="reply_to" value id="reply_to">
+            <div id="responseInfo"></div><!-- Тут должен добавится инпут с значением ID нужного сообщения. А в label="Вы отвечаете на сообщение от (ник пользователя) - (первые 30 символов)..." -->
             <input type="submit" value="Submit"/>
-            <button id='js-captcha-refresh' type="button"><i class="bi bi-arrow-clockwise"></i></button>
+            <button id='js-captcha-refresh' type="button" title="Reset"><i class="bi bi-arrow-clockwise"></i></button>
         </form>
 
     </div>
@@ -33,16 +34,42 @@
 
     <div id="messages">
         {% for message in message_list %}
-            <div class="post">
-                <div class="header">
-                    <div class="username"><a href="{{ message.home_page }}">{{ message.user_name }}</a></div>
-                    <div class="date">{{ message.created }}</div>
+            <div class="post" data-message-id="{{ message.id }}">
+                <div class="message">
+                    <div class="header">
+                        <div style="display: flex;">
+                            <div class="username"><a href="{{ message.home_page }}">{{ message.user_name }}</a></div>
+                            <button type="button" class="reply-button" data-message-id="{{ message.id }}" data-user-name="{{ message.user_name }}" data-message-text="{{ message.message }}" title="Reply">
+                                <i class="bi bi-reply"></i>
+                            </button>
+                        </div>
+                        <div class="date">{{ message.created }}</div>
+                    </div>
+                    <div class="content">{{ message.message|safe }}</div>
                 </div>
-                <div class="content">{{ message.message|safe }}</div>
+            
+                <!-- Вложенные ответы -->
+                <div class="responses">
+                    {% for response in message.responses %}
+                        <div class="message response" data-message-id="{{ response.id }}"> <!-- тутай -->
+                            <div class="header">
+                                <div style="display: flex;">
+                                    <div class="username"><a href="{{ response.home_page }}">{{ response.user_name }}</a></div>
+                                    <button type="button" class="reply-button" data-message-id="{{ response.id }}" data-user-name="{{ response.user_name }}" data-message-text="{{ response.message }}" title="Reply">
+                                        <i class="bi bi-reply"></i>
+                                    </button>
+                                </div>
+                                <div class="date">{{ response.created }}</div>
+                            </div>
+                            <div class="content"><b>@{{ response.response_user }}</b>, {{ response.message|safe }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
         {% endfor %}
     </div>
     
+
     <nav class="paginator">
         <ul class="pagination">
             <li class="page-item"><a class="page-link" href="{% if  paginator_mes.has_previous %}
@@ -96,30 +123,67 @@
 
         chatSocket.onmessage = function(e){
             let data = JSON.parse(e.data)
-            // console.log("Data:", data)
-
-            if(data.type === "chat" && {{ paginator_mes.number }} === 1){                    
-                let messages = document.getElementById("messages")
-                messages.insertAdjacentHTML("afterbegin", 
-                    `<div class="post">
+            if(data.type === "chat"){                    
+                // Поиск элемента сообщений
+                let messages = document.getElementById("messages");
+                let messageContainer;
+                
+                if (data.reply) {
+                    // Это ответ на существующее сообщение
+                    messageContainer = document.querySelector(`div[data-message-id="${data.reply}"] .responses`);
+                    console.log(data);
+                    if (!messageContainer) {
+                        messageContainer = document.querySelector(`div[data-message-id="${data.reply}"]`).closest('.responses');
+                        if (!messageContainer) {
+                            console.error("Response target not found");
+                            return; // Если контейнер не найден, выходим
+                        }
+                    }
+                } else if ( {{ paginator_mes.number }} === 1) {
+                    // Это новое сообщение
+                    messages.insertAdjacentHTML("afterbegin",
+                        `<div class="post" data-message-id="${data.id}">
+                            <div class="message">
+                                <div class="header">
+                                    <div style="display: flex;">
+                                        <div class="username"><a href="${data.home_page}">${data.user_name}</a></div>
+                                        <button type="button" class="reply-button" data-message-id="${data.id}" data-user-name="${data.user_name}" data-message-text="${data.message}" title="Reply">
+                                            <i class="bi bi-reply"></i>
+                                        </button>
+                                    </div>
+                                    <div class="date">${data.created}</div>
+                                </div>
+                                <div class="content">${data.message}</div>
+                            </div> 
+                            <div class="responses"></div>
+                        </div>`);
+                    return;
+                }
+                // Добавляем ответ в найденный контейнер
+                messageContainer.insertAdjacentHTML("beforeend", 
+                    `<div class="message response" data-message-id="${data.id}">
                         <div class="header">
-                            <div class="username"><a href="${data.home_page}">${data.user_name}</a></div>
+                            <div style="display: flex;">
+                                <div class="username"><a href="${data.home_page}">${data.user_name}</a></div>
+                                <button type="button" class="reply-button" data-message-id="${data.id}" data-user-name="${data.user_name}" data-message-text="${data.message}" title="Reply">
+                                    <i class="bi bi-reply"></i>
+                                </button>
+                            </div>
                             <div class="date">${data.created}</div>
                         </div>
-                        <div class="content">${data.message}</div>
-                    </div>`)
-                
+                        <div class="content"><b>@${data.reply_for}</b>, ${data.message}</div>
+                    </div>`);
             }
             if(data.type === "error") {
-                console.log(data.errors)
-                alert(data.errors)
+                console.log(data.errors);
+                alert(data.errors);
             }
-        }
+        };
+        
 
         let form = document.getElementById("messageForm2")
         form.addEventListener("submit", (e)=> {
             e.preventDefault()
-            console.log(e)
             let user_name = e.target.user_name.value
             let email = e.target.email.value
             let home_page = e.target.home_page.value
@@ -127,16 +191,42 @@
             e.target.text.value = ''
             let captcha_0 = e.target.captcha_0.value
             let captcha_1 = e.target.captcha_1.value
+            let reply = e.target.reply_to.value
             chatSocket.send(JSON.stringify({
                 'user_name': user_name,
                 'email': email,
                 'home_page': home_page,
                 'message': message,
                 'captcha': [captcha_0, captcha_1],
+                'reply': reply,
             }))
         })
 
-
+        document.addEventListener('DOMContentLoaded', function () {
+            const messagesContainer = document.getElementById('messages');
+        
+            // Делегирование событий: обработчик кликов на кнопки внутри #messages
+            messagesContainer.addEventListener('click', function(event) {
+                // Проверяем, является ли элемент, по которому кликнули, кнопкой ответа
+                if (event.target.closest('.reply-button')) {
+                    const button = event.target.closest('.reply-button');
+                    event.preventDefault();
+        
+                    const messageId = button.dataset.messageId;
+                    const userName = button.dataset.userName;
+                    const messageText = button.dataset.messageText;
+                    
+                    const hiddenInput = document.getElementById("reply_to");
+                    hiddenInput.value = messageId;
+            
+                    const responseInfo = document.getElementById('responseInfo');
+                    responseInfo.innerHTML = ''; 
+                    responseInfo.insertAdjacentHTML('beforeend', `<label>Вы отвечаете на сообщение от <b>@${userName}</b> - <i>${messageText.slice(0, 30)}...</i></label>`);
+                }
+            });
+        });
+        
+            
     </script>
 </body>
 </html>
