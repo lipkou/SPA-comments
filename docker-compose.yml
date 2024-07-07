@@ -33,10 +33,6 @@ services:
       bash -c "./manage.py collectstatic --noinput && ./manage.py makemigrations && ./manage.py migrate && hypercorn config.asgi:application --bind 0.0.0.0:8000" 
     ports:
       - "8000:8000"    
-  # bash -c ""    
-  # bash -c "./manage.py кгтыукму"    
-
-# bash -c "./manage.py collectstatic --noinput && ./manage.py migrate && uvicorn config.asgi:application --host 0.0.0.0 --port 8000"    
   redis:
     image: redis:5
     container_name: dzencode_redis

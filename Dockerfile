@@ -4,9 +4,6 @@ SHELL ["/bin/bash", "-c"]
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
-# ENV DJANGO_SETTINGS_MODULE=config.settings
-
-# RUN apt-get update && apt-get install -y python3 python3-pip python3-venv 
 
 
 RUN apt-get update && apt-get install -y \ 
@@ -29,6 +26,4 @@ RUN pip install -r requirements.txt
 RUN pip install hypercorn
 USER super_user
 
-# CMD ["python3","manage.py", "runserver", "0.0.0.0:8000"]
-# CMD ["uvicorn", "config.asgi:application", "--host", "0.0.0.0", "--port", "8000"]
 CMD ["hypercorn" "config.asgi:application" "--bind" "0.0.0.0:8000"]

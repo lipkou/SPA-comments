@@ -8,7 +8,7 @@ def home(request):
     page = int(request.GET.get("page", 1))
     sort_type = request.GET.get("sort", "-created")
 
-    # Получаем только главные сообщения (не ответы)
+    # Receive only top messages (not replies)
     messages = Message.objects.filter(reply__isnull=True).order_by(sort_type)
     paginator = Paginator(messages, 20)
 
@@ -29,7 +29,7 @@ def home(request):
             'responses': []
         }
         
-        # Добавляем ответы к каждому главному сообщению
+        # Adding replies to each main post
         responses = message.responses.all().order_by('created')
         response_user = message.user_name
         while responses:

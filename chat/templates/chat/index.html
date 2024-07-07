@@ -14,7 +14,7 @@
         <form id="messageForm2"> {% csrf_token %}
             {{ form }}
             <input type="hidden" name="reply_to" value id="reply_to">
-            <div id="responseInfo"></div><!-- Тут должен добавится инпут с значением ID нужного сообщения. А в label="Вы отвечаете на сообщение от (ник пользователя) - (первые 30 символов)..." -->
+            <div id="responseInfo"></div>
             <input type="submit" value="Submit"/>
             <button id='js-captcha-refresh' type="button" title="Reset"><i class="bi bi-arrow-clockwise"></i></button>
         </form>
@@ -48,7 +48,7 @@
                     <div class="content">{{ message.message|safe }}</div>
                 </div>
             
-                <!-- Вложенные ответы -->
+                <!-- Nested responses -->
                 <div class="responses">
                     {% for response in message.responses %}
                         <div class="message response" data-message-id="{{ response.id }}"> <!-- тутай -->
@@ -124,23 +124,21 @@
         chatSocket.onmessage = function(e){
             let data = JSON.parse(e.data)
             if(data.type === "chat"){                    
-                // Поиск элемента сообщений
                 let messages = document.getElementById("messages");
                 let messageContainer;
                 
                 if (data.reply) {
-                    // Это ответ на существующее сообщение
                     messageContainer = document.querySelector(`div[data-message-id="${data.reply}"] .responses`);
                     console.log(data);
                     if (!messageContainer) {
                         messageContainer = document.querySelector(`div[data-message-id="${data.reply}"]`).closest('.responses');
                         if (!messageContainer) {
                             console.error("Response target not found");
-                            return; // Если контейнер не найден, выходим
+                            return; 
                         }
                     }
                 } else if ( {{ paginator_mes.number }} === 1) {
-                    // Это новое сообщение
+                    // it is new message
                     messages.insertAdjacentHTML("afterbegin",
                         `<div class="post" data-message-id="${data.id}">
                             <div class="message">
@@ -159,7 +157,7 @@
                         </div>`);
                     return;
                 }
-                // Добавляем ответ в найденный контейнер
+                // Add the reply to the found container
                 messageContainer.insertAdjacentHTML("beforeend", 
                     `<div class="message response" data-message-id="${data.id}">
                         <div class="header">
@@ -205,9 +203,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             const messagesContainer = document.getElementById('messages');
         
-            // Делегирование событий: обработчик кликов на кнопки внутри #messages
             messagesContainer.addEventListener('click', function(event) {
-                // Проверяем, является ли элемент, по которому кликнули, кнопкой ответа
                 if (event.target.closest('.reply-button')) {
                     const button = event.target.closest('.reply-button');
                     event.preventDefault();

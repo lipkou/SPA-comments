@@ -6,10 +6,10 @@ from channels.generic.websocket import WebsocketConsumer
 from datetime import datetime
 from .models.messages import Message
 from channels.generic.websocket import AsyncWebsocketConsumer
+from captcha.models import CaptchaStore
 
 class ChatConsumer(WebsocketConsumer):
     def connect(self):
-        from captcha.models import CaptchaStore
         self.room_group_name = "test"
         
         async_to_sync(self.channel_layer.group_add)(
@@ -127,7 +127,6 @@ class MessageFormValidator:
 
     def captcha(self): 
         captcha:list[str] = self.text_data_json["captcha"]
-        from captcha.models import CaptchaStore
         try:
             captcha_0 = CaptchaStore.objects.get(hashkey=captcha[0])
             if captcha_0.response != captcha[1].lower():
