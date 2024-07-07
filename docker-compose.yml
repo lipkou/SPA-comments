@@ -3,7 +3,7 @@ version: '3.9'
 services:
   postgres_db:
     image: postgres:15
-    container_name: dzencode_postgres
+    container_name: postgres_db
     volumes:
       - ~/.pg/pg_data/super_user:/var/lib/postgresql/data
     env_file:
@@ -12,6 +12,11 @@ services:
       POSTGRES_DB: ${PG_DATABASE}
       POSTGRES_USER: ${PG_USER}
       POSTGRES_PASSWORD: ${PG_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER} -d ${PG_DATABASE}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   dZENcode:
     build: .
     image: dzencode_docker:latest
@@ -25,7 +30,13 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: "${DJANGO_SETTINGS_MODULE}"
     command: >
-      bash -c "./manage.py collectstatic --noinput && ./manage.py makemigrations && ./manage.py migrate && uvicorn config.asgi:application --host 0.0.0.0 --port 8000"    
+      bash -c "./manage.py runserver 0.0.0.0:8000" 
+    ports:
+      - "8000:8000"    
+  # bash -c ""    
+  # bash -c "./manage.py кгтыукму"    
+
+# bash -c "./manage.py collectstatic --noinput && ./manage.py migrate && uvicorn config.asgi:application --host 0.0.0.0 --port 8000"    
   redis:
     image: redis:5
     container_name: dzencode_redis
