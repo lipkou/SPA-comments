@@ -26,8 +26,9 @@ COPY --chown=super_user:super_user . .
 RUN find . -type f -exec dos2unix {} +
 
 RUN pip install -r requirements.txt
-
+RUN pip install hypercorn
 USER super_user
 
 # CMD ["python3","manage.py", "runserver", "0.0.0.0:8000"]
-CMD ["uvicorn", "config.asgi:application", "--host", "0.0.0.0", "--port", "8000"]
+# CMD ["uvicorn", "config.asgi:application", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["hypercorn" "config.asgi:application" "--bind" "0.0.0.0:8000"]

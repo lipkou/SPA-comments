@@ -30,7 +30,7 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: "${DJANGO_SETTINGS_MODULE}"
     command: >
-      bash -c "./manage.py runserver 0.0.0.0:8000" 
+      bash -c "./manage.py collectstatic --noinput && ./manage.py makemigrations && ./manage.py migrate && hypercorn config.asgi:application --bind 0.0.0.0:8000" 
     ports:
       - "8000:8000"    
   # bash -c ""    
