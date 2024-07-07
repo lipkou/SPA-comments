@@ -17,7 +17,7 @@ ALLOWED_HOSTS = env.str('ALLOWED_HOSTS', default='').split(' ')
 
 INSTALLED_APPS = [
     "channels",
-    "daphne",
+    # "daphne",
     
     'django.contrib.admin',
     'django.contrib.auth',
@@ -36,7 +36,10 @@ ASGI_APPLICATION = "config.asgi.application"
 
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('redis', 6379)],
+        },
     },
 }
 
@@ -124,8 +127,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
-# STATIC_ROOT = 'static'
 MEDIA_ROOT = 'media'
+STATIC_ROOT = os.path.join(BASE_DIR, "static2/")
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static/")
 ]

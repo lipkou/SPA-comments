@@ -165,6 +165,10 @@ media/
 /media/
 */media/
 
+static2/
+/static2/
+*/static2/
+
 
 */migrations/*
 !*/migrations/__init__.py
