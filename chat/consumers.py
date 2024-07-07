@@ -3,9 +3,10 @@ import re
 from bs4 import BeautifulSoup
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
-from captcha.models import CaptchaStore
 from datetime import datetime
 from .models.messages import Message
+from channels.generic.websocket import AsyncWebsocketConsumer
+from captcha.models import CaptchaStore
 
 class ChatConsumer(WebsocketConsumer):
     def connect(self):
@@ -126,7 +127,6 @@ class MessageFormValidator:
 
     def captcha(self): 
         captcha:list[str] = self.text_data_json["captcha"]
-
         try:
             captcha_0 = CaptchaStore.objects.get(hashkey=captcha[0])
             if captcha_0.response != captcha[1].lower():
