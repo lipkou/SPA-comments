@@ -11,12 +11,13 @@
 </head>
 <body>
     <div class="forum">
-        <form id="messageForm2"> {% csrf_token %}
+        <form id="messageForm2" enctype="multipart/form-data"> {% csrf_token %}
             {{ form }}
             <input type="hidden" name="reply_to" value id="reply_to">
             <div id="responseInfo"></div>
             <input type="submit" value="Submit"/>
             <button id='js-captcha-refresh' type="button" title="Reset"><i class="bi bi-arrow-clockwise"></i></button>
+            <input type="file" name="files" id="fileInput" multiple/>
         </form>
 
     </div>
@@ -45,7 +46,15 @@
                         </div>
                         <div class="date">{{ message.created }}</div>
                     </div>
-                    <div class="content">{{ message.message|safe }}</div>
+                    <div class="content">{{ message.message|safe }}
+                        
+                        <br>
+                        <div class="files">
+                            {% for file in message.files_data %}
+                            <i><a href="/media/uploads/{{ file.name }}" target="_blank">{{ file.name }}</a> </i>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
             
                 <!-- Nested responses -->
@@ -61,7 +70,14 @@
                                 </div>
                                 <div class="date">{{ response.created }}</div>
                             </div>
-                            <div class="content"><b>@{{ response.response_user }}</b>, {{ response.message|safe }}</div>
+                            <div class="content"><b>@{{ response.response_user }}</b>, {{ response.message|safe }}
+                            <br>
+                            <div class="files">
+                                {% for file in response.files_data %}
+                                <i><a href="/media/uploads/{{ file.name }}" target="_blank">{{ file.name }}</a> </i>
+                                {% endfor %}
+                            </div>
+                            </div>
                         </div>
                     {% endfor %}
                 </div>
@@ -120,9 +136,16 @@
         let url = `ws://${window.location.host}/ws/socket-server/`
 
         const chatSocket = new WebSocket(url)
+        
+        let messageCount = {{ total_messages }};
+        let totalPages = {{ paginator_mes.paginator.num_pages }};
+        let currentPage = {{ paginator_mes.number }};
+        const maxMessagesPerPage = 55;
 
         chatSocket.onmessage = function(e){
             let data = JSON.parse(e.data)
+
+            
             if(data.type === "chat"){                    
                 let messages = document.getElementById("messages");
                 let messageContainer;
@@ -151,10 +174,35 @@
                                     </div>
                                     <div class="date">${data.created}</div>
                                 </div>
-                                <div class="content">${data.message}</div>
+                                <div class="content">${data.message}
+                                <br>
+                                <div class="files">
+                                    ${data.files_data.map(file => `<a href="/media/uploads/${file.name}" target="_blank">${file.name}</a>`).join(' ')}
+                                </div>
+                                </div>
                             </div> 
                             <div class="responses"></div>
                         </div>`);
+                    messageCount++;
+                    console.log(messageCount)
+                    if (messageCount > maxMessagesPerPage) {
+                        const lastMessage = document.querySelector('.post:last-child');
+                        lastMessage.remove();
+                        
+                        if (currentPage === totalPages) {
+                            totalPages++
+                            const paginator = document.querySelector('.paginator .pagination');
+                            const lastPageItem = paginator.querySelector('.page-item:last-child');
+                            
+                            // Create new page item
+                            const newPageItem = document.createElement('li');
+                            newPageItem.className = 'page-item';
+                            newPageItem.innerHTML = `<a class="page-link" href="?page=${totalPages}">${totalPages}</a>`;
+                            
+                            // Insert new page item before the last page item
+                            paginator.insertBefore(newPageItem, lastPageItem);
+                        }
+                    }
                     return;
                 }
                 // Add the reply to the found container
@@ -169,7 +217,12 @@
                             </div>
                             <div class="date">${data.created}</div>
                         </div>
-                        <div class="content"><b>@${data.reply_for}</b>, ${data.message}</div>
+                        <div class="content"><b>@${data.reply_for}</b>, ${data.message}
+                        <br>
+                        <div class="files">
+                            ${data.files_data.map(file => `<a href="/media/uploads/${file.name}" target="_blank">${file.name}</a>`).join(' ')}
+                        </div>
+                        </div>
                     </div>`);
             }
             if(data.type === "error") {
@@ -190,14 +243,45 @@
             let captcha_0 = e.target.captcha_0.value
             let captcha_1 = e.target.captcha_1.value
             let reply = e.target.reply_to.value
-            chatSocket.send(JSON.stringify({
-                'user_name': user_name,
-                'email': email,
-                'home_page': home_page,
-                'message': message,
-                'captcha': [captcha_0, captcha_1],
-                'reply': reply,
-            }))
+            
+            let fileInput = document.getElementById("fileInput");
+            let files = fileInput.files;
+            
+            let formData = new FormData();
+            for (let i = 0; i < files.length; i++) {
+                formData.append('files', files[i]);
+            }
+            formData.append("files", null)
+            
+
+            let xhr = new XMLHttpRequest();
+            xhr.open("POST", "/upload/", true);
+            xhr.setRequestHeader("X-CSRFToken", e.target.csrfmiddlewaretoken.value);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4) {
+                    if (xhr.status == 200) {
+                        let response = JSON.parse(xhr.responseText);
+                        if (response.success) {
+                            chatSocket.send(JSON.stringify({
+                                'user_name': user_name,
+                                'email': email,
+                                'home_page': home_page,
+                                'message': message,
+                                'captcha': [captcha_0, captcha_1],
+                                'reply': reply,
+                                'file_ids': response.file_ids
+                            }));
+                            e.target.text.value = '';
+                            fileInput.value = '';
+                        } else {
+                            alert(response.error);
+                        }
+                    } else {
+                        alert('Произошла ошибка при проверке файлов.');
+                    }
+                }
+            };
+            xhr.send(formData);
         })
 
         document.addEventListener('DOMContentLoaded', function () {
