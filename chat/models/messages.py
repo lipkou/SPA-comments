@@ -10,7 +10,8 @@ class Message(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     reply = models.ForeignKey("self", on_delete=models.CASCADE, blank=True, null=True, related_name="responses")
-
+    files = models.ManyToManyField("chat.MesFiles", blank=True, related_name="files") 
+    
     class Meta:
         ordering = ('-created', "user_name", "email")
     
@@ -20,3 +21,8 @@ class Message(models.Model):
     @property
     def is_response(self):
         return self.reply is not None
+
+
+class MesFiles(models.Model):
+    # message = models.ForeignKey(Message, on_delete=models.CASCADE)
+    file = models.FileField(upload_to='uploads/', blank=False, null=False)

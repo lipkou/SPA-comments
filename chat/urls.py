@@ -6,4 +6,5 @@ app_name="chat"
 
 urlpatterns = [
     path("", views.home, name="home"),
+    path('upload/', views.file_upload, name='file_upload'),
 ]

@@ -4,9 +4,9 @@ from bs4 import BeautifulSoup
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 from datetime import datetime
-from .models.messages import Message
-from channels.generic.websocket import AsyncWebsocketConsumer
+from .models.messages import Message, MesFiles
 from captcha.models import CaptchaStore
+from config import settings 
 
 class ChatConsumer(WebsocketConsumer):
     def connect(self):
@@ -27,7 +27,7 @@ class ChatConsumer(WebsocketConsumer):
         message = text_data_json["message"]
         created = datetime.now().strftime('%d.%m.%Y %H:%M')
         reply = text_data_json["reply"]
-        
+        file_ids = text_data_json.get("file_ids", [])  # получение идентификаторов файлов
         
         # Validate
         val = MessageFormValidator(text_data_json)
@@ -44,7 +44,6 @@ class ChatConsumer(WebsocketConsumer):
         if reply:
             reply_class = Message.objects.get(id=reply)
             reply_for = reply_class.user_name
-            
         else: 
             reply_class = None
         
@@ -53,9 +52,18 @@ class ChatConsumer(WebsocketConsumer):
             email=email,
             home_page=home_page,
             text=message,
-            created=created,
             reply=reply_class,
         )
+        files_data = []
+        if file_ids:
+            for file_id in file_ids:
+                if not file_id: 
+                    continue
+                file_instance = MesFiles.objects.get(id=file_id)
+                files_data.append({'id': file_instance.id, 'name': file_instance.file.name[8:]})
+                new_message.files.add(file_instance)
+        
+        new_message.save()
         
         async_to_sync(self.channel_layer.group_send)(
             self.room_group_name,
@@ -69,6 +77,7 @@ class ChatConsumer(WebsocketConsumer):
                 'message': message,
                 'reply': reply,
                 'reply_for': reply_for,
+                'files_data': files_data,  # передача идентификаторов файлов
             }
         )
 
@@ -84,6 +93,7 @@ class ChatConsumer(WebsocketConsumer):
             'message': event["message"],
             'reply': event["reply"],
             'reply_for': event["reply_for"],
+            'files_data': event["files_data"],  # передача идентификаторов файлов
         }))
         
 
