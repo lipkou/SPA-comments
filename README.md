@@ -1,4 +1,4 @@
-# SPA-приложение: Комментарии. (dZENcode)
+# SPA-приложение: Комментарии. 
 **Тут я раскажу как запустить проект и что для этоно надо сделать.**
 *Подрузомивается что вы уже установили проект у вас есть установлен [Doker](https://www.docker.com/products/docker-desktop/) и [PostgreSQL](https://www.postgresql.org/download/).*
 
